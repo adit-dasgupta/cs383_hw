@@ -1,6 +1,6 @@
 import sys
-import puzz
-import pdqpq
+import hw1.puzz as puzz
+import hw1.pdqpq as pdqpq
 
 
 GOAL_STATE = puzz.EightPuzzleBoard("012345678")
@@ -167,6 +167,67 @@ class BreadthFirstSolver:
             tile = path[i].get_tile(x, y)        
             cost += int(tile)**2
         return cost
+
+# UCS inherits all attributes from BFS bar frontier
+class UniformCostSolver(BreadthFirstSolver):
+    def __init__(self):
+        # inherit all attributes
+        super().__init__()
+        # frontier is prio queue, not fifo queue
+        self.frontier = pdqpq.PriorityQueue()
+    
+    # solve function
+    def solve(self, start_state):
+        # initialization
+        self.parents[start_state] = None
+        # track costs to each state
+        self.costs[start_state] = 0
+        # add start to frontier, prio 0
+        self.add_to_frontier(start_state, 0)
+
+        # while nodes exist, in the frontier, explore
+        while not self.frontier.is_empty():
+            # pop lowest prio node
+            node = self.frontier.pop()
+            self.explored.add(node)
+            self.expanded_count += 1
+            
+            # check for goal state after pop
+            if node == self.goal:
+                return self.get_results_dict(node)
+            
+            succs = node.successors()
+            # calculate cost to reach succ thru curr node
+            for move, succ in succs.items():
+                # blank pos in curr node
+                x, y = node.find(None)
+                # tile that is moved into blank spot
+                tile = succ.get_tile(x, y)
+                transition_cost = int(tile) ** 2
+                new_cost = self.cost[node] + transition_cost
+
+                # if succ not in frontier, or cheaper path found
+                if succ not in self.explored:
+                    if succ not in self.frontier or new_cost < self.frontier.get(succ):
+                        self.parents[succ] = node
+                        self.cost[succ] = new_cost
+                        self.add_to_frontier(succ, new_cost)
+        
+        # search failed
+        return self.get_results_dict(None)
+
+
+            
+
+        
+    
+    # add to frontier
+    def add_to_frontier(self, node):
+        # add node w/ priority
+        self.frontier.add(node, priority)
+        self.frontier.counter += 1
+
+
 
 
 def print_table(flav__results, include_path=False):
