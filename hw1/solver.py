@@ -226,10 +226,12 @@ class UniformCostSolver(BreadthFirstSolver):
         
     
     # add to frontier
-    def add_to_frontier(self, node):
+    #added priority = 0 in arguments since self.frontier calls it - Srimaan
+    def add_to_frontier(self, node, priority = 0):
         # add node w/ priority
         self.frontier.add(node, priority)
-        self.frontier.counter += 1
+        #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
+        self.frontier_count += 1
 
 
 
