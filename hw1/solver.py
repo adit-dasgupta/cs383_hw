@@ -175,6 +175,8 @@ class UniformCostSolver(BreadthFirstSolver):
         super().__init__()
         # frontier is prio queue, not fifo queue
         self.frontier = pdqpq.PriorityQueue()
+        #added the self.costs dictionary - Srimaan
+        self.costs = {}
     
     # solve function
     def solve(self, start_state):
@@ -204,13 +206,15 @@ class UniformCostSolver(BreadthFirstSolver):
                 # tile that is moved into blank spot
                 tile = succ.get_tile(x, y)
                 transition_cost = int(tile) ** 2
-                new_cost = self.cost[node] + transition_cost
+                # added s to self.costs - Srimaan
+                new_cost = self.costs[node] + transition_cost
 
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
                     if succ not in self.frontier or new_cost < self.frontier.get(succ):
                         self.parents[succ] = node
-                        self.cost[succ] = new_cost
+                        #added s to self.costs - Srimaan
+                        self.costs[succ] = new_cost
                         self.add_to_frontier(succ, new_cost)
         
         # search failed
