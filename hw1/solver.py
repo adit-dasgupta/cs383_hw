@@ -219,11 +219,6 @@ class UniformCostSolver(BreadthFirstSolver):
         
         # search failed
         return self.get_results_dict(None)
-
-
-            
-
-        
     
     # add to frontier
     #added priority = 0 in arguments since self.frontier calls it - Srimaan
@@ -232,6 +227,55 @@ class UniformCostSolver(BreadthFirstSolver):
         self.frontier.add(node, priority)
         #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
         self.frontier_count += 1
+        
+        
+
+
+class AStarSolver(UniformCostSolver):
+    def __init__(self, flavor):
+        super().__init__()
+        self.flavor = flavor 
+        
+        def solve(self, start_state):
+        # initialization
+        self.parents[start_state] = None
+        # track costs to each state
+        self.costs[start_state] = 0
+        # add start to frontier, prio 0
+        self.add_to_frontier(start_state, 0)
+
+        # while nodes exist, in the frontier, explore
+        while not self.frontier.is_empty():
+            # pop lowest prio node
+            node = self.frontier.pop()
+            self.explored.add(node)
+            self.expanded_count += 1
+            
+            # check for goal state after pop
+            if node == self.goal:
+                return self.get_results_dict(node)
+            
+            succs = node.successors()
+            # calculate cost to reach succ thru curr node
+            for move, succ in succs.items():
+                # blank pos in curr node
+                x, y = node.find(None)
+                # tile that is moved into blank spot
+                tile = succ.get_tile(x, y)
+                transition_cost = int(tile) ** 2
+                # added s to self.costs - Srimaan
+                new_cost = self.costs[node] + transition_cost
+
+                # if succ not in frontier, or cheaper path found
+                if succ not in self.explored:
+                    if succ not in self.frontier or new_cost < self.frontier.get(succ):
+                        self.parents[succ] = node
+                        #added s to self.costs - Srimaan
+                        self.costs[succ] = new_cost
+                        self.add_to_frontier(succ, new_cost)
+        
+        # search failed
+        return self.get_results_dict(None)
 
 
 
