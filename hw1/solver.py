@@ -181,7 +181,7 @@ class UniformCostSolver(BreadthFirstSolver):
         # initialization
         self.parents[start_state] = None
         # track costs to each state
-        self.costs[start_state] = 0
+        self.cost[start_state] = 0
         # add start to frontier, prio 0
         self.add_to_frontier(start_state, 0)
 
@@ -204,15 +204,15 @@ class UniformCostSolver(BreadthFirstSolver):
                 # tile that is moved into blank spot
                 tile = succ.get_tile(x, y)
                 transition_cost = int(tile) ** 2
-                # added s to self.costs - Srimaan
-                new_cost = self.costs[node] + transition_cost
+                # added s to self.cost - Srimaan
+                new_cost = self.cost[node] + transition_cost
 
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
                     if succ not in self.frontier or new_cost < self.frontier.get(succ):
                         self.parents[succ] = node
-                        #added s to self.costs - Srimaan
-                        self.costs[succ] = new_cost
+                        #added s to self.cost - Srimaan
+                        self.cost[succ] = new_cost
                         self.add_to_frontier(succ, new_cost)
         
         # search failed
