@@ -175,15 +175,15 @@ class UniformCostSolver(BreadthFirstSolver):
         super().__init__()
         # frontier is prio queue, not fifo queue
         self.frontier = pdqpq.PriorityQueue()
-        #added the self.costs dictionary - Srimaan
-        self.costs = {}
+        #added the self.cost dictionary - Srimaan
+        self.cost = {}
     
     # solve function
     def solve(self, start_state):
         # initialization
         self.parents[start_state] = None
         # track costs to each state
-        self.costs[start_state] = 0
+        self.cost[start_state] = 0
         # add start to frontier, prio 0
         self.add_to_frontier(start_state, 0)
 
@@ -206,15 +206,15 @@ class UniformCostSolver(BreadthFirstSolver):
                 # tile that is moved into blank spot
                 tile = succ.get_tile(x, y)
                 transition_cost = int(tile) ** 2
-                # added s to self.costs - Srimaan
-                new_cost = self.costs[node] + transition_cost
+                # added s to self.cost - Srimaan
+                new_cost = self.cost[node] + transition_cost
 
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
                     if succ not in self.frontier or new_cost < self.frontier.get(succ):
                         self.parents[succ] = node
-                        #added s to self.costs - Srimaan
-                        self.costs[succ] = new_cost
+                        #added s to self.cost - Srimaan
+                        self.cost[succ] = new_cost
                         self.add_to_frontier(succ, new_cost)
         
         # search failed
@@ -229,9 +229,7 @@ class UniformCostSolver(BreadthFirstSolver):
         #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
         self.frontier_count += 1
         
-        
-        
-
+# A* inherists all attributes from UCS, need heuristic                
 class AStarSolver(UniformCostSolver):
     def __init__(self, flavor):
         #contains all attributes from UCS and BFS
@@ -245,7 +243,7 @@ class AStarSolver(UniformCostSolver):
         # initialization
         self.parents[start_state] = None
         # track costs to each state
-        self.costs[start_state] = 0
+        self.cost[start_state] = 0
         # add start to frontier, prio 0
         self.add_to_frontier(start_state, self.get_heuristic(start_state))
 
@@ -268,8 +266,8 @@ class AStarSolver(UniformCostSolver):
                 # tile that is moved into blank spot
                 tile = succ.get_tile(x, y)
                 transition_cost = int(tile) ** 2
-                # added s to self.costs - Srimaan
-                new_cost = self.costs[node] + transition_cost
+                # added s to self.cost - Srimaan
+                new_cost = self.cost[node] + transition_cost
                 #introduced the cost for A*
                 h_cost = self.get_heuristic(succ)
                 f_cost = new_cost + h_cost
@@ -277,27 +275,37 @@ class AStarSolver(UniformCostSolver):
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
                     #modified if condition to compare f_cost for A* instead of new_cost for UCS 
-                    if succ not in self.frontier or new_cost < self.costs.get(succ, float('inf')):
+                    if succ not in self.frontier or new_cost < self.cost.get(succ, float('inf')):
                         self.parents[succ] = node
-                        self.costs[succ] = new_cost
+                        self.cost[succ] = new_cost
                         self.add_to_frontier(succ, f_cost)
         # search failed
         return self.get_results_dict(None)
     
-    
-    def get_heuristic(self, state):
-        if 'h1' in self.flavor:
-            return h1_misplaced(state)
-        elif 'h2' in self.flavor:
-            return h2_manhattan(state)
-        elif 'h3' in self.flavor:
-            return h3_weighted_manhattan(state)
-        else:
-            return 0
+# global get_heuristic for A* and Greedy    
+def get_heuristic(state, flavor):
+    if 'h1' in flavor:
+        return h1_misplaced(state)
+    elif 'h2' in flavor:
+        return h2_manhattan(state)
+    elif 'h3' in flavor:
+        return h3_weighted_manhattan(state)
+    else:
+        return 0
         
 def h1_misplaced(state):
-    return None
-
+    # count tiles not in goal position, skip blank
+    count = 0
+    # for each tile
+    for tile in range(1, 9):
+        # find the coord of tile in current state
+        x1, y1 = state.find(str(tile))
+        # find coor of tiole in GOAL_STATE
+        x2, y2 = GOAL_STATE.find(str(tile))
+        # if coords dont match, increase count
+        if (x1, y1) != (x2, y2):
+            count += 1
+    return count
 
 def h2_manhattan(state):
         distance = 0
