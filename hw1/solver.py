@@ -42,7 +42,7 @@ def solve_puzzle(start_state, flavor):
     if strat == 'bfs':
         return BreadthFirstSolver().solve(start_state)
     elif strat == 'ucost':
-        raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
+        return UniformCostSolver().solve(start_state)
     elif strat == 'greedy':
         raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
     elif strat == 'astar':
@@ -175,8 +175,10 @@ class UniformCostSolver(BreadthFirstSolver):
         super().__init__()
         # frontier is prio queue, not fifo queue
         self.frontier = pdqpq.PriorityQueue()
+        # initialize self.cost dict
+        self.cost = {}
     
-# solve function
+    # solve function
     def solve(self, start_state):
         # initialization
         self.parents[start_state] = None
@@ -220,7 +222,7 @@ class UniformCostSolver(BreadthFirstSolver):
 
 
     # add to frontier
-    def add_to_frontier(self, node):
+    def add_to_frontier(self, node, priority=0):
         # add node w/ priority
         self.frontier.add(node, priority)
         self.frontier.counter += 1
