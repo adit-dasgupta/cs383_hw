@@ -175,8 +175,13 @@ class UniformCostSolver(BreadthFirstSolver):
         super().__init__()
         # frontier is prio queue, not fifo queue
         self.frontier = pdqpq.PriorityQueue()
+<<<<<<< HEAD
         # initialize self.cost dict
         self.cost = {}
+=======
+        #added the self.costs dictionary - Srimaan
+        self.costs = {}
+>>>>>>> 80e24f8a78191cd6a4d2b0c6285a3de37c4b0f7e
     
     # solve function
     def solve(self, start_state):
@@ -206,15 +211,25 @@ class UniformCostSolver(BreadthFirstSolver):
                 # tile that is moved into blank spot
                 tile = succ.get_tile(x, y)
                 transition_cost = int(tile) ** 2
+<<<<<<< HEAD
                 # added s to self.cost - Srimaan
                 new_cost = self.cost[node] + transition_cost
+=======
+                # added s to self.costs - Srimaan
+                new_cost = self.costs[node] + transition_cost
+>>>>>>> 80e24f8a78191cd6a4d2b0c6285a3de37c4b0f7e
 
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
                     if succ not in self.frontier or new_cost < self.frontier.get(succ):
                         self.parents[succ] = node
+<<<<<<< HEAD
                         #added s to self.cost - Srimaan
                         self.cost[succ] = new_cost
+=======
+                        #added s to self.costs - Srimaan
+                        self.costs[succ] = new_cost
+>>>>>>> 80e24f8a78191cd6a4d2b0c6285a3de37c4b0f7e
                         self.add_to_frontier(succ, new_cost)
         
         # search failed
@@ -222,10 +237,16 @@ class UniformCostSolver(BreadthFirstSolver):
 
 
     # add to frontier
+<<<<<<< HEAD
     def add_to_frontier(self, node, priority=0):
+=======
+    #added priority = 0 in arguments since self.frontier calls it - Srimaan
+    def add_to_frontier(self, node, priority = 0):
+>>>>>>> 80e24f8a78191cd6a4d2b0c6285a3de37c4b0f7e
         # add node w/ priority
         self.frontier.add(node, priority)
-        self.frontier.counter += 1
+        #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
+        self.frontier_count += 1
 
 
 
