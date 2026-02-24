@@ -1,6 +1,6 @@
 import sys
-import hw1.puzz as puzz
-import hw1.pdqpq as pdqpq
+import puzz
+import pdqpq
 
 
 GOAL_STATE = puzz.EightPuzzleBoard("012345678")
@@ -42,11 +42,11 @@ def solve_puzzle(start_state, flavor):
     if strat == 'bfs':
         return BreadthFirstSolver().solve(start_state)
     elif strat == 'ucost':
-        raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
+        return UniformCostSolver().solve(start_state)
     elif strat == 'greedy':
         raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
     elif strat == 'astar':
-        raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
+        return AStarSolver(flavor).solve(start_state)
     else:
         raise ValueError("Unknown search flavor '{}'".format(flavor))
 
@@ -219,7 +219,8 @@ class UniformCostSolver(BreadthFirstSolver):
         
         # search failed
         return self.get_results_dict(None)
-    
+
+
     # add to frontier
     #added priority = 0 in arguments since self.frontier calls it - Srimaan
     def add_to_frontier(self, node, priority = 0):
@@ -229,20 +230,24 @@ class UniformCostSolver(BreadthFirstSolver):
         self.frontier_count += 1
         
         
-
+        
 
 class AStarSolver(UniformCostSolver):
     def __init__(self, flavor):
+        #contains all attributes from UCS and BFS
         super().__init__()
+        #initialize heuristic
         self.flavor = flavor 
         
-        def solve(self, start_state):
+        
+    # solve function
+    def solve(self, start_state):
         # initialization
         self.parents[start_state] = None
         # track costs to each state
         self.costs[start_state] = 0
         # add start to frontier, prio 0
-        self.add_to_frontier(start_state, 0)
+        self.add_to_frontier(start_state, self.get_heuristic(start_state))
 
         # while nodes exist, in the frontier, explore
         while not self.frontier.is_empty():
@@ -265,19 +270,50 @@ class AStarSolver(UniformCostSolver):
                 transition_cost = int(tile) ** 2
                 # added s to self.costs - Srimaan
                 new_cost = self.costs[node] + transition_cost
+                #introduced the cost for A*
+                h_cost = self.get_heuristic(succ)
+                f_cost = new_cost + h_cost
 
                 # if succ not in frontier, or cheaper path found
                 if succ not in self.explored:
-                    if succ not in self.frontier or new_cost < self.frontier.get(succ):
+                    #modified if condition to compare f_cost for A* instead of new_cost for UCS 
+                    if succ not in self.frontier or new_cost < self.costs.get(succ, float('inf')):
                         self.parents[succ] = node
-                        #added s to self.costs - Srimaan
                         self.costs[succ] = new_cost
-                        self.add_to_frontier(succ, new_cost)
-        
+                        self.add_to_frontier(succ, f_cost)
         # search failed
         return self.get_results_dict(None)
+    
+    
+    def get_heuristic(self, state):
+        if 'h1' in self.flavor:
+            return h1_misplaced(state)
+        elif 'h2' in self.flavor:
+            return h2_manhattan(state)
+        elif 'h3' in self.flavor:
+            return h3_weighted_manhattan(state)
+        else:
+            return 0
+        
+def h1_misplaced(state):
+    return None
 
 
+def h2_manhattan(state):
+        distance = 0
+        for tile in range(1, 9):
+            x1, y1 = state.find(str(tile))
+            x2, y2 = GOAL_STATE.find(str(tile))
+            distance += abs(x1 - x2) + abs(y1 - y2)
+        return distance
+    
+def h3_weighted_manhattan(state):
+        distance = 0
+        for tile in range(1, 9):
+            x1, y1 = state.find(str(tile))
+            x2, y2 = GOAL_STATE.find(str(tile))
+            distance += (abs(x1 - x2) + abs(y1 - y2)) * (int(tile) ** 2)
+        return distance
 
 
 def print_table(flav__results, include_path=False):
@@ -326,9 +362,9 @@ def get_test_puzzles():
         optimal solution path length of 3-5, 10-15, and >=25 respectively.
     
     """ 
-    test1 = None  # fix this line!
-    test2 = None  # fix this line!
-    test3 = None  # fix this line!
+    test1 = puzz.EightPuzzleBoard("142635708")
+    test2 = puzz.EightPuzzleBoard("482173605")
+    test3 = puzz.EightPuzzleBoard("837062415")
     #
     # fill in function body here
     #    
