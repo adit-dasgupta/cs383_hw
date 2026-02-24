@@ -225,7 +225,7 @@ class UniformCostSolver(BreadthFirstSolver):
     def add_to_frontier(self, node, priority=0):
         # add node w/ priority
         self.frontier.add(node, priority)
-        self.frontier.counter += 1
+        self.frontier.count += 1
 
 
 
