@@ -1,6 +1,6 @@
 Names: Srimaan Sridharan, Adit Dasgupta
-
-
+References: Lecture 1 and Lecture 2 slides
+Notes: No abnormal errors or warnings
 Answers:
     1.  The results strongly agree with the distinction. If we take the test case of 837062415, both 
     UCS and all three variants of A* found cost = 616 with length = 24. On 182043765, both found 
