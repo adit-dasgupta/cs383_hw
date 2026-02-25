@@ -46,7 +46,7 @@ def solve_puzzle(start_state, flavor):
     elif strat == 'greedy':
         raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
     elif strat == 'astar':
-        return AStarSolver(flavor).solve(start_state)
+        return AStarSolver(heur).solve(start_state)
     else:
         raise ValueError("Unknown search flavor '{}'".format(flavor))
 
@@ -245,7 +245,7 @@ class AStarSolver(UniformCostSolver):
         # track costs to each state
         self.cost[start_state] = 0
         # add start to frontier, prio 0
-        self.add_to_frontier(start_state, self.get_heuristic(start_state))
+        self.add_to_frontier(start_state, get_heuristic(start_state, self.flavor))
 
         # while nodes exist, in the frontier, explore
         while not self.frontier.is_empty():
@@ -269,7 +269,7 @@ class AStarSolver(UniformCostSolver):
                 # added s to self.cost - Srimaan
                 new_cost = self.cost[node] + transition_cost
                 #introduced the cost for A*
-                h_cost = self.get_heuristic(succ)
+                h_cost = get_heuristic(succ, self.flavor)
                 f_cost = new_cost + h_cost
 
                 # if succ not in frontier, or cheaper path found
@@ -284,11 +284,11 @@ class AStarSolver(UniformCostSolver):
     
 # global get_heuristic for A* and Greedy    
 def get_heuristic(state, flavor):
-    if 'h1' in flavor:
+    if flavor == "h1":
         return h1_misplaced(state)
-    elif 'h2' in flavor:
+    elif flavor == "h2":
         return h2_manhattan(state)
-    elif 'h3' in flavor:
+    elif flavor == "h3":
         return h3_weighted_manhattan(state)
     else:
         return 0
@@ -308,20 +308,20 @@ def h1_misplaced(state):
     return count
 
 def h2_manhattan(state):
-        distance = 0
-        for tile in range(1, 9):
-            x1, y1 = state.find(str(tile))
-            x2, y2 = GOAL_STATE.find(str(tile))
-            distance += abs(x1 - x2) + abs(y1 - y2)
-        return distance
+    distance = 0
+    for tile in range(1, 9):
+        x1, y1 = state.find(str(tile))
+        x2, y2 = GOAL_STATE.find(str(tile))
+        distance += abs(x1 - x2) + abs(y1 - y2)
+    return distance
     
 def h3_weighted_manhattan(state):
-        distance = 0
-        for tile in range(1, 9):
-            x1, y1 = state.find(str(tile))
-            x2, y2 = GOAL_STATE.find(str(tile))
-            distance += (abs(x1 - x2) + abs(y1 - y2)) * (int(tile) ** 2)
-        return distance
+    distance = 0
+    for tile in range(1, 9):
+        x1, y1 = state.find(str(tile))
+        x2, y2 = GOAL_STATE.find(str(tile))
+        distance += (abs(x1 - x2) + abs(y1 - y2)) * (int(tile) ** 2)
+    return distance
 
 
 def print_table(flav__results, include_path=False):
