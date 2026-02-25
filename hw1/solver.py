@@ -1,6 +1,6 @@
 import sys
-import hw1.puzz as puzz
-import hw1.pdqpq as pdqpq
+import puzz
+import pdqpq
 
 
 GOAL_STATE = puzz.EightPuzzleBoard("012345678")
@@ -46,7 +46,7 @@ def solve_puzzle(start_state, flavor):
     elif strat == 'greedy':
         raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
     elif strat == 'astar':
-        raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
+        return AStarSolver(heur).solve(start_state)
     else:
         raise ValueError("Unknown search flavor '{}'".format(flavor))
 
@@ -225,9 +225,102 @@ class UniformCostSolver(BreadthFirstSolver):
     def add_to_frontier(self, node, priority=0):
         # add node w/ priority
         self.frontier.add(node, priority)
-        self.frontier.count += 1
+        #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
+        self.frontier_count += 1
+        
+# A* inherists all attributes from UCS, need heuristic                
+class AStarSolver(UniformCostSolver):
+    def __init__(self, flavor):
+        #contains all attributes from UCS and BFS
+        super().__init__()
+        #initialize heuristic
+        self.flavor = flavor 
+        
+        
+    # solve function
+    def solve(self, start_state):
+        # initialization
+        self.parents[start_state] = None
+        # track costs to each state
+        self.cost[start_state] = 0
+        # add start to frontier, prio 0
+        self.add_to_frontier(start_state, get_heuristic(start_state, self.flavor))
 
+        # while nodes exist, in the frontier, explore
+        while not self.frontier.is_empty():
+            # pop lowest prio node
+            node = self.frontier.pop()
+            self.explored.add(node)
+            self.expanded_count += 1
+            
+            # check for goal state after pop
+            if node == self.goal:
+                return self.get_results_dict(node)
+            
+            succs = node.successors()
+            # calculate cost to reach succ thru curr node
+            for move, succ in succs.items():
+                # blank pos in curr node
+                x, y = node.find(None)
+                # tile that is moved into blank spot
+                tile = succ.get_tile(x, y)
+                transition_cost = int(tile) ** 2
+                # added s to self.cost - Srimaan
+                new_cost = self.cost[node] + transition_cost
+                #introduced the cost for A*
+                h_cost = get_heuristic(succ, self.flavor)
+                f_cost = new_cost + h_cost
 
+                # if succ not in frontier, or cheaper path found
+                if succ not in self.explored:
+                    #modified if condition to compare f_cost for A* instead of new_cost for UCS 
+                    if succ not in self.frontier or new_cost < self.cost.get(succ, float('inf')):
+                        self.parents[succ] = node
+                        self.cost[succ] = new_cost
+                        self.add_to_frontier(succ, f_cost)
+        # search failed
+        return self.get_results_dict(None)
+    
+# global get_heuristic for A* and Greedy    
+def get_heuristic(state, flavor):
+    if flavor == "h1":
+        return h1_misplaced(state)
+    elif flavor == "h2":
+        return h2_manhattan(state)
+    elif flavor == "h3":
+        return h3_weighted_manhattan(state)
+    else:
+        return 0
+        
+def h1_misplaced(state):
+    # count tiles not in goal position, skip blank
+    count = 0
+    # for each tile
+    for tile in range(1, 9):
+        # find the coord of tile in current state
+        x1, y1 = state.find(str(tile))
+        # find coor of tiole in GOAL_STATE
+        x2, y2 = GOAL_STATE.find(str(tile))
+        # if coords dont match, increase count
+        if (x1, y1) != (x2, y2):
+            count += 1
+    return count
+
+def h2_manhattan(state):
+    distance = 0
+    for tile in range(1, 9):
+        x1, y1 = state.find(str(tile))
+        x2, y2 = GOAL_STATE.find(str(tile))
+        distance += abs(x1 - x2) + abs(y1 - y2)
+    return distance
+    
+def h3_weighted_manhattan(state):
+    distance = 0
+    for tile in range(1, 9):
+        x1, y1 = state.find(str(tile))
+        x2, y2 = GOAL_STATE.find(str(tile))
+        distance += (abs(x1 - x2) + abs(y1 - y2)) * (int(tile) ** 2)
+    return distance
 
 
 def print_table(flav__results, include_path=False):
@@ -276,9 +369,9 @@ def get_test_puzzles():
         optimal solution path length of 3-5, 10-15, and >=25 respectively.
     
     """ 
-    test1 = None  # fix this line!
-    test2 = None  # fix this line!
-    test3 = None  # fix this line!
+    test1 = puzz.EightPuzzleBoard("142635708")
+    test2 = puzz.EightPuzzleBoard("482173605")
+    test3 = puzz.EightPuzzleBoard("837062415")
     #
     # fill in function body here
     #    
