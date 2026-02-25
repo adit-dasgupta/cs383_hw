@@ -357,18 +357,25 @@ def h1_misplaced(state):
     return count
 
 def h2_manhattan(state):
+    #calculates the distance of the tile from it's goal position
     distance = 0
+    #per tile
     for tile in range(1, 9):
+        #finds the coordinates of the tile in current state
         x1, y1 = state.find(str(tile))
+        #finds coords of tiles in goal state
         x2, y2 = GOAL_STATE.find(str(tile))
+        #calculation formula for distance
         distance += abs(x1 - x2) + abs(y1 - y2)
     return distance
     
 def h3_weighted_manhattan(state):
+    #similar to h2
     distance = 0
     for tile in range(1, 9):
         x1, y1 = state.find(str(tile))
         x2, y2 = GOAL_STATE.find(str(tile))
+        #calculation formula for h3, with squared tile value
         distance += (abs(x1 - x2) + abs(y1 - y2)) * (int(tile) ** 2)
     return distance
 
