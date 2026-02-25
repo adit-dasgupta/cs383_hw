@@ -175,7 +175,7 @@ class UniformCostSolver(BreadthFirstSolver):
         super().__init__()
         # frontier is prio queue, not fifo queue
         self.frontier = pdqpq.PriorityQueue()
-        #added the self.cost dictionary - Srimaan
+        # initialize self.cost dict
         self.cost = {}
     
     # solve function
@@ -222,8 +222,7 @@ class UniformCostSolver(BreadthFirstSolver):
 
 
     # add to frontier
-    #added priority = 0 in arguments since self.frontier calls it - Srimaan
-    def add_to_frontier(self, node, priority = 0):
+    def add_to_frontier(self, node, priority=0):
         # add node w/ priority
         self.frontier.add(node, priority)
         #corrected from self.frontier.counter to self.frontier_count since the latter is present in the parent class - Srimaan
