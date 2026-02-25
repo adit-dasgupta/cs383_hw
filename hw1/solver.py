@@ -44,7 +44,7 @@ def solve_puzzle(start_state, flavor):
     elif strat == 'ucost':
         return UniformCostSolver().solve(start_state)
     elif strat == 'greedy':
-        raise NotImplementedError(strat + ' not implemented yet')  # delete this line!
+        return GreedySolver(heur).solve(start_state)
     elif strat == 'astar':
         return AStarSolver(heur).solve(start_state)
     else:
@@ -280,7 +280,57 @@ class AStarSolver(UniformCostSolver):
                         self.add_to_frontier(succ, f_cost)
         # search failed
         return self.get_results_dict(None)
+
+class GreedySolver(UniformCostSolver):
+    def __init__(self, flavor):
+        # inherit all attributes from UCS
+        super().__init__()
+        # initialize heuristic
+        self.flavor = flavor
     
+    # solve function
+    def solve(self, start_state):
+        # initialization
+        self.parents[start_state] = None
+        # track costs to each state
+        self.cost[start_state] = 0
+        # add start to frontier, prio is heuristic only
+        self.add_to_frontier(start_state, get_heuristic(start_state, self.flavor))
+
+        # while node in frontier, explore
+        while not self.frontier.is_empty():
+            # pop lowest heuristic node
+            node = self.frontier.pop()
+            self.explored.add(node)
+            self.expanded_count += 1
+
+            # check for goal state
+            if node == self.goal:
+                return self.get_results_dict(node)
+            
+            # all valid moves from curr node
+            succs = node.successors()
+            for move, succ in succs.items():
+                # blank pos in curr node
+                x, y = node.find(None)
+                # tile that moved into the blank spot
+                tile = succ.get_tile(x, y)
+                transition_cost = int(tile) ** 2
+                new_cost = self.cost[node] + transition_cost
+                # greedy uses heuristic as prio, not path cost
+                h_cost = get_heuristic(succ, self.flavor)
+
+                if succ not in self.explored:
+                    if succ not in self.frontier or h_cost < self.frontier.get(succ):
+                        self.parents[succ] = node
+                        self.cost[succ] = new_cost
+                        # prio is heuristic only
+                        self.add_to_frontier(succ, h_cost)
+
+        # search failed
+        return self.get_results_dict(None)
+
+
 # global get_heuristic for A* and Greedy    
 def get_heuristic(state, flavor):
     if flavor == "h1":
