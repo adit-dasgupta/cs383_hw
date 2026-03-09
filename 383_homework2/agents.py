@@ -1,5 +1,6 @@
 import random
 import math
+import connect383
 
 
 BOT_NAME =  'CANCER_BOT'
@@ -48,13 +49,40 @@ class MinimaxAgent:
         best_move = None
         best_state = None
 
-        for move, state in state.successors():
-            util = self.minimax(state)
+        for move, next_state in state.successors():
+            util = self.minimax(next_state)
             if ((nextp == 1) and (util > best_util)) or ((nextp == -1) and (util < best_util)):
-                best_util, best_move, best_state = util, move, state
+                best_util, best_move, best_state = util, move, next_state
         return best_move, best_state
 
     def minimax(self, state):
+        #base case
+        if state.is_full():
+            return state.utility()
+        
+        #recursive case if the player is the maximizer
+        if state.next_player() == 1:
+            #lower bound set to negative infinity
+            best_util = -math.inf
+            #checked each of the possible states (no need for move)
+            for move, next_state in state.successors():
+                #recursive call to minimax for each of the possible states
+                util = self.minimax(next_state)
+                best_util = max(best_util, util)
+            return best_util
+        
+        #recursive case if the player is the minimizer
+        if state.next_player() == -1:
+            best_util = math.inf
+            for move, next_state in state.successors():
+                util = self.minimax(next_state)
+                #looks for the lowest value across all states insetad of max
+                best_util = min(best_util, util)
+            return best_util
+    
+        
+        
+        
         """Determine the minimax utility value of the given state.
 
         Gets called by get_move() to determine the value of each successor state.
@@ -64,10 +92,6 @@ class MinimaxAgent:
 
         Returns: the exact minimax utility value of the state
         """
-        #
-        # Fill this in!
-        #
-        return 42  # Change this line!
 
 
 class MinimaxLookaheadAgent(MinimaxAgent):
@@ -104,6 +128,57 @@ class MinimaxLookaheadAgent(MinimaxAgent):
         pass
 
     def evaluation(self, state):
+        
+        #feature 1 = calculating the points present on the board
+        score = state.utility()
+        
+        
+        #feature 2 = 2/3 in a row
+        #using the helper functions, we convert hte 2D board into a 1D list
+        all_lines = state.get_rows() + state.get_cols() + state.get_diags()
+        #parsing through all the lines
+        for line in all_lines:
+            #create a window that looks at 4 pieces
+            for i in range(len(line)-3):
+                window4 = line[i:i+4]
+                #if there are 1 pieces and 1 empty spaces, adds a larger weight to the score
+                if window4.count(1) == 3 and window4.count(0) == 1:
+                    score += 5
+                elif window4.count(-1) == 3 and window4.count(0) == 1:
+                    score -= 5
+                #if there are 3 pieces and 1 empty space, adds a larger weight to the score
+                elif window4.count(1) == 2 and window4.count(0) == 2:
+                    score += 2
+                elif window4.count(-1) == 2 and window4.count(0) == 2:
+                    score -= 2
+            for i in range(len(line) - 2):
+                window3 = line[i:i+3]
+                if window3.count(1) == 2 and window3.count(0) == 1:
+                    score += 3
+                elif window3.count(-1) == 2 and window3.count(0) == 1:
+                    score -= 3
+                    
+        #feature 3 = starting in the middle columns
+        #step 1, find the middle columns
+        center = state.num_cols // 2
+        
+        #step 2, store the list of the middle column pieces in middle_column
+        columns = state.get_cols()
+        col_weights = {0:0.15, 1:0.05, -1:0.05}
+        for offset, weight in col_weights.items():
+            col_index = center + offset
+            if 0 <= col_index < state.num_cols:
+                col = columns[col_index]
+                score += col.count(1) * weight
+                score -= col.count(-1) * weight
+        
+        return score
+    
+        
+            
+        
+        
+
         """Estimate the utility value of the game state based on features.
 
         Gets called by minimax() once the depth limit has been reached.  
@@ -114,12 +189,7 @@ class MinimaxLookaheadAgent(MinimaxAgent):
 
         Returns: a heuristic estimate of the utility value of the state
         """
-        #
-        # Fill this in!
-        #
 
-        # Note: This cannot be "return state.utility() + c", where c is a constant. 
-        return 3  # Change this line!
 
 
 class AltMinimaxLookaheadAgent(MinimaxAgent):
@@ -137,37 +207,36 @@ class AltMinimaxLookaheadAgent(MinimaxAgent):
 
 
 class MinimaxPruneAgent(MinimaxAgent):
-    """Computer agent that uses minimax with alpha-beta pruning to select the best move.
-    
-    Hint: Consider what you did for MinimaxAgent.  What do you need to change to prune a
-    branch of the state space? 
-    """
     def minimax(self, state):
-        """Determine the minimax utility value the given state using alpha-beta pruning.
-
-        The value should be equal to the one determined by MinimaxAgent.minimax(), but the 
-        algorithm should do less work.  You can check this by inspecting the value of the class 
-        variable GameState.state_count, which keeps track of how many GameState objects have been 
-        created over time.  This agent does not have a depth limit.
-
-        N.B.: When exploring the game tree and expanding nodes, you must consider the child nodes
-        in the order that they are returned by GameState.successors().  That is, you cannot prune
-        the state reached by moving to column 4 before you've explored the state reached by a move
-        to column 1 (we're trading optimality for gradeability here).
-
-        Args: 
-            state: a connect383.GameState object representing the current board
-
-        Returns: the minimax utility value of the state
-        """
-        #
-        # Fill this in!
-        #
-        return 13  # Change this line!
+        #we run the agent through the helper function which was the alphabeta function
+        return self.alphabeta(state, -math.inf, math.inf)
+        
 
     def alphabeta(self, state,alpha, beta):
-        """This is just a helper method for minimax(). Feel free to use it or not."""
-        pass
+        #same as before
+        if state.is_full():
+            return state.utility()
+    
+        if state.next_player() == 1:
+            best_util = -math.inf
+            for move, next_state in state.successors():
+                #recursive call to alphabeta 
+                util = self.alphabeta(next_state, alpha, beta)
+                best_util = max(best_util, util)
+                alpha = max(alpha, best_util)
+                if beta <= alpha:
+                    break
+            return best_util
+        
+        if state.next_player() == -1:
+            best_util = math.inf
+            for move, next_state in state.successors():
+                util = self.alphabeta(next_state, alpha, beta)
+                best_util = min(best_util, util)
+                beta = min(beta, best_util)
+                if beta <= alpha:
+                    break
+            return best_util
 
 
 def get_agent(tag):
