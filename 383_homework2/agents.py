@@ -1,5 +1,6 @@
 import random
 import math
+import connect383
 
 
 BOT_NAME =  'CANCER_BOT'
@@ -55,6 +56,33 @@ class MinimaxAgent:
         return best_move, best_state
 
     def minimax(self, state):
+        #base case
+        if state.is_full():
+            return state.utility()
+        
+        #recursive case if the player is the maximizer
+        if state.next_player() == 1:
+            #lower bound set to negative infinity
+            best_util = -math.inf
+            #checked each of the possible states (no need for move)
+            for move, state in state.successors():
+                #recursive call to minimax for each of the possible states
+                util = self.minimax(state)
+                best_util = max(best_util, util)
+            return best_util
+        
+        #recursive case if the player is the minimizer
+        if state.next_player() == -1:
+            best_util = math.inf
+            for move, state in state.successors():
+                util = self.minimax(state)
+                #looks for the lowest value across all states insetad of max
+                best_util = min(best_util, util)
+            return best_util
+    
+        
+        
+        
         """Determine the minimax utility value of the given state.
 
         Gets called by get_move() to determine the value of each successor state.
@@ -64,10 +92,11 @@ class MinimaxAgent:
 
         Returns: the exact minimax utility value of the state
         """
+        
         #
         # Fill this in!
         #
-        return 42  # Change this line!
+        #return 42  # Change this line!
 
 
 class MinimaxLookaheadAgent(MinimaxAgent):
@@ -137,37 +166,36 @@ class AltMinimaxLookaheadAgent(MinimaxAgent):
 
 
 class MinimaxPruneAgent(MinimaxAgent):
-    """Computer agent that uses minimax with alpha-beta pruning to select the best move.
-    
-    Hint: Consider what you did for MinimaxAgent.  What do you need to change to prune a
-    branch of the state space? 
-    """
     def minimax(self, state):
-        """Determine the minimax utility value the given state using alpha-beta pruning.
-
-        The value should be equal to the one determined by MinimaxAgent.minimax(), but the 
-        algorithm should do less work.  You can check this by inspecting the value of the class 
-        variable GameState.state_count, which keeps track of how many GameState objects have been 
-        created over time.  This agent does not have a depth limit.
-
-        N.B.: When exploring the game tree and expanding nodes, you must consider the child nodes
-        in the order that they are returned by GameState.successors().  That is, you cannot prune
-        the state reached by moving to column 4 before you've explored the state reached by a move
-        to column 1 (we're trading optimality for gradeability here).
-
-        Args: 
-            state: a connect383.GameState object representing the current board
-
-        Returns: the minimax utility value of the state
-        """
-        #
-        # Fill this in!
-        #
-        return 13  # Change this line!
+        #we run the agent through the helper function which was the alphabeta function
+        return self.alphabeta(state, -math.inf, math.inf)
+        
 
     def alphabeta(self, state,alpha, beta):
-        """This is just a helper method for minimax(). Feel free to use it or not."""
-        pass
+        #same as before
+        if state.is_full():
+            return state.utility()
+    
+        if state.next_player() == 1:
+            best_util = -math.inf
+            for move, next_state in state.successors():
+                #recursive call to alphabeta 
+                util = self.alphabeta(next_state, alpha, beta)
+                best_util = max(best_util, util)
+                alpha = max(alpha, best_util)
+                if beta <= alpha:
+                    break
+            return best_util
+        
+        if state.next_player() == -1:
+            best_util = math.inf
+            for move, next_state in state.successors():
+                util = self.alphabeta(next_state, alpha, beta)
+                best_util = min(best_util, util)
+                beta = min(beta, best_util)
+                if beta <= alpha:
+                    break
+            return best_util
 
 
 def get_agent(tag):
